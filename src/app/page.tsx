@@ -14,15 +14,24 @@ const formatPrice = (price: number) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(price);
 
 export default async function Home() {
-  const cmsRecord = await prisma.cmsContent.findUnique({ where: { pageName: 'HOME_MARKETING' } });
+  let cmsRecord = null;
+  let categories: any[] = [];
+  let featuredProducts: any[] = [];
+
+  try {
+    cmsRecord = await prisma.cmsContent.findUnique({ where: { pageName: 'HOME_MARKETING' } });
+    categories = await prisma.category.findMany({ take: 4, orderBy: { createdAt: 'asc' } });
+    featuredProducts = await prisma.product.findMany({ where: { isFeatured: true }, take: 4, include: { category: true } });
+  } catch (error) {
+    console.error("Database connection failed on homepage:", error);
+    // Fallback gracefully without crashing the marketing page
+  }
+
   const cms = cmsRecord?.content as any || {
     heroTitle: "Elevate Your Lifestyle With Nexus Premium",
     heroSubtitle: "Experience the perfect fusion of cutting-edge technology and minimalist aesthetic. Shop the latest arrivals in high-performance retail gear.",
     heroImage: "https://lh3.googleusercontent.com/aida-public/AB6AXuDUgo1-ipgZsUPeae2rL6OHA3BEa5kBzLF8jeIBQCRVlUJoMZDYowHCGjII7OYFuvfNMi88PRzPJsT_mmpaBAYlkRntKKRn7dBWuBff6kWNcFvPB_CdfLmPp326DXNpx9DntV6abYhD0blIaqlfZ_h9A2fH1uqhE4RA3IjAysPa-UARPnxLNEKkm6ZxIb9cP54l1IaYzslMiN0AfHKEl72Yd5LmFxvgcfNvWmWs_ISZQLx41FLhGU5Mks1jU0jwtTI0T9xf8KXcNF4"
   };
-
-  const categories = await prisma.category.findMany({ take: 4, orderBy: { createdAt: 'asc' } });
-  const featuredProducts = await prisma.product.findMany({ where: { isFeatured: true }, take: 4, include: { category: true } });
 
   return (
     <main>
