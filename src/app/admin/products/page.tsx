@@ -10,6 +10,7 @@ export default function AdminProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
 
   useEffect(() => {
     fetchProducts();
@@ -31,6 +32,34 @@ export default function AdminProductsPage() {
     setDeleting(null);
   }
 
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImporting(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/products/bulk", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(data.message + (data.errors?.length ? `\n\nErrors:\n${data.errors.join('\n')}` : ''));
+        fetchProducts();
+      } else {
+        alert(`Error: ${data.error}`);
+      }
+    } catch (err: any) {
+      alert(`Upload failed: ${err.message}`);
+    } finally {
+      setImporting(false);
+      e.target.value = ""; // reset file input
+    }
+  }
+
   return (
     <div className="p-stack-lg space-y-stack-lg max-w-container-max mx-auto">
       <div className="flex justify-between items-center">
@@ -38,9 +67,16 @@ export default function AdminProductsPage() {
           <h1 className="font-headline-md text-headline-md font-bold">Product Catalog</h1>
           <p className="text-on-surface-variant mt-1">{products.length} products</p>
         </div>
-        <Link href="/admin/products/new" className="flex items-center gap-2 px-5 py-2.5 bg-primary text-on-primary rounded-xl font-label-md hover:brightness-110 transition-all active:scale-95 shadow-md">
-          <span className="material-symbols-outlined">add</span>Add Product
-        </Link>
+        <div className="flex items-center gap-3">
+          <label className="flex items-center gap-2 px-5 py-2.5 border border-outline-variant text-on-surface rounded-xl font-label-md hover:bg-surface-container transition-all active:scale-95 cursor-pointer">
+            {importing ? <span className="material-symbols-outlined animate-spin text-sm">sync</span> : <span className="material-symbols-outlined">upload_file</span>}
+            Bulk CSV
+            <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} disabled={importing} />
+          </label>
+          <Link href="/admin/products/new" className="flex items-center gap-2 px-5 py-2.5 bg-primary text-on-primary rounded-xl font-label-md hover:brightness-110 transition-all active:scale-95 shadow-md">
+            <span className="material-symbols-outlined">add</span>Add Product
+          </Link>
+        </div>
       </div>
 
       <div className="bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant">
@@ -50,6 +86,7 @@ export default function AdminProductsPage() {
               <tr>
                 <th className="px-6 py-4 font-label-md text-on-surface-variant">Product</th>
                 <th className="px-6 py-4 font-label-md text-on-surface-variant">Category</th>
+                <th className="px-6 py-4 font-label-md text-on-surface-variant text-center">Featured</th>
                 <th className="px-6 py-4 font-label-md text-on-surface-variant text-right">Price</th>
                 <th className="px-6 py-4 font-label-md text-on-surface-variant text-right">Stock</th>
                 <th className="px-6 py-4 font-label-md text-on-surface-variant text-center">Status</th>
@@ -83,6 +120,9 @@ export default function AdminProductsPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-on-surface-variant">{product.category?.name || "—"}</td>
+                  <td className="px-6 py-4 text-center">
+                    {product.isFeatured && <span className="material-symbols-outlined text-secondary text-sm">star</span>}
+                  </td>
                   <td className="px-6 py-4 text-right font-medium">{formatPrice(product.price)}</td>
                   <td className={`px-6 py-4 text-right font-medium ${product.stock === 0 ? 'text-error' : product.stock < 10 ? 'text-secondary' : ''}`}>{product.stock}</td>
                   <td className="px-6 py-4 text-center">

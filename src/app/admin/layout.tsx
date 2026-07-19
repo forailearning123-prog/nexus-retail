@@ -5,6 +5,15 @@ import { usePathname } from "next/navigation";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  
+  if (pathname === '/admin/login') {
+    return <>{children}</>;
+  }
+
+  const handleLogout = async () => {
+    await fetch('/api/admin/logout', { method: 'POST' });
+    window.location.href = '/admin/login';
+  };
 
   return (
     <div className="bg-surface text-on-surface min-h-screen">
@@ -30,6 +39,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <span className="font-label-md text-label-md">Products</span>
           </Link>
           <Link 
+            href="/admin/categories" 
+            className={`flex items-center gap-3 px-4 py-3 mx-2 my-1 rounded-lg transition-all ${pathname === '/admin/categories' ? 'bg-primary-container text-on-primary-container shadow-sm' : 'text-surface-variant hover:bg-on-surface-variant/10'}`}
+          >
+            <span className="material-symbols-outlined" style={{ fontVariationSettings: pathname === '/admin/categories' ? "'FILL' 1" : "" }}>category</span>
+            <span className="font-label-md text-label-md">Categories</span>
+          </Link>
+          <Link 
             href="/admin/orders" 
             className={`flex items-center gap-3 px-4 py-3 mx-2 my-1 rounded-lg transition-all ${pathname === '/admin/orders' ? 'bg-primary-container text-on-primary-container shadow-sm' : 'text-surface-variant hover:bg-on-surface-variant/10'}`}
           >
@@ -53,7 +69,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <span className="material-symbols-outlined">storefront</span>
             <span className="font-label-md text-label-md">View Store</span>
           </Link>
-          <button className="flex items-center gap-3 px-4 py-3 text-surface-variant hover:text-white transition-colors w-full text-left">
+          <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 text-surface-variant hover:text-white transition-colors w-full text-left">
             <span className="material-symbols-outlined">logout</span>
             <span className="font-label-md text-label-md">Logout</span>
           </button>

@@ -20,6 +20,7 @@ model Category {
   id          String    @id @default(cuid())
   name        String    @unique // e.g., "Bottles", "Home Decoration", "Jewelries"
   description String?
+  imageUrl    String?   // R2 Bucket URL
   products    Product[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -31,6 +32,7 @@ model Product {
   description String
   price       Float    // Stored in INR
   imageUrl    String?  // R2 Bucket URL
+  isFeatured  Boolean  @default(false)
   stock       Int      @default(0)
   categoryId  String
   category    Category @relation(fields: [categoryId], references: [id])

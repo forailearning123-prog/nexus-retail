@@ -24,11 +24,11 @@ export async function GET() {
 // POST /api/categories
 export async function POST(req: Request) {
   try {
-    const { name, description } = await req.json();
+    const { name, description, imageUrl } = await req.json();
     if (!name) return NextResponse.json({ error: "Name is required" }, { status: 400 });
 
     const category = await prisma.category.create({
-      data: { name, description },
+      data: { name, description, imageUrl },
     });
     return NextResponse.json({ category }, { status: 201 });
   } catch (error) {
