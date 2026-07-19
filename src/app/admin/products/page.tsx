@@ -1,188 +1,108 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
-const products = [
-  {
-    id: 1,
-    name: "Aura Pro Wireless Headphones",
-    sku: "NX-AURA-PRO-001",
-    category: "Audio",
-    price: 299.0,
-    stock: 45,
-    status: "Active",
-  },
-  {
-    id: 2,
-    name: "Vanguard Smart Watch",
-    sku: "NX-VNGD-WTCH-002",
-    category: "Wearables",
-    price: 189.0,
-    stock: 120,
-    status: "Active",
-  },
-  {
-    id: 3,
-    name: "Aura Lift Laptop Stand",
-    sku: "NX-LIFT-STND-003",
-    category: "Accessories",
-    price: 79.0,
-    stock: 200,
-    status: "Active",
-  },
-  {
-    id: 4,
-    name: "Nexus Core Hub Gen 2",
-    sku: "NX-CORE-HUB-004",
-    category: "Smart Home",
-    price: 249.0,
-    stock: 8,
-    status: "Low Stock",
-  },
-  {
-    id: 5,
-    name: "StealthKeys RGB Mechanical",
-    sku: "NX-STLTH-KEY-005",
-    category: "Accessories",
-    price: 189.0,
-    stock: 0,
-    status: "Out of Stock",
-  },
-];
+const formatPrice = (price: number) =>
+  new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(price);
 
-export default function ProductCatalogPage() {
+export default function AdminProductsPage() {
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  async function fetchProducts() {
+    setLoading(true);
+    const res = await fetch("/api/products?limit=100");
+    const data = await res.json();
+    setProducts(data.products || []);
+    setLoading(false);
+  }
+
+  async function handleDelete(id: string, name: string) {
+    if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+    setDeleting(id);
+    await fetch(`/api/products/${id}`, { method: "DELETE" });
+    await fetchProducts();
+    setDeleting(null);
+  }
+
   return (
-    <div className="p-6 md:p-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+    <div className="p-stack-lg space-y-stack-lg max-w-container-max mx-auto">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="font-headline-sm text-headline-sm text-on-surface">
-            Product Catalog
-          </h1>
-          <p className="text-body-sm text-on-surface-variant mt-1">
-            Manage all products across your store.
-          </p>
+          <h1 className="font-headline-md text-headline-md font-bold">Product Catalog</h1>
+          <p className="text-on-surface-variant mt-1">{products.length} products</p>
         </div>
-        <Link
-          href="/admin/products/new"
-          className="bg-primary text-on-primary px-5 py-2.5 rounded-lg font-label-md flex items-center gap-2 hover:bg-surface-tint transition-all active:scale-95"
-        >
-          <span className="material-symbols-outlined text-[18px]">add</span>
-          Add Product
+        <Link href="/admin/products/new" className="flex items-center gap-2 px-5 py-2.5 bg-primary text-on-primary rounded-xl font-label-md hover:brightness-110 transition-all active:scale-95 shadow-md">
+          <span className="material-symbols-outlined">add</span>Add Product
         </Link>
       </div>
 
-      {/* Search & Filter Bar */}
-      <div className="bg-surface p-4 rounded-xl border border-outline-variant mb-6 flex flex-col sm:flex-row gap-4">
-        <div className="flex-1 relative">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">
-            search
-          </span>
-          <input
-            className="w-full pl-10 pr-4 py-2.5 bg-surface-container-low rounded-lg border border-outline-variant text-body-sm focus:ring-2 focus:ring-primary outline-none"
-            placeholder="Search products by name or SKU..."
-            type="text"
-          />
-        </div>
-        <select className="px-4 py-2.5 bg-surface-container-low rounded-lg border border-outline-variant text-body-sm focus:ring-2 focus:ring-primary outline-none">
-          <option>All Categories</option>
-          <option>Audio</option>
-          <option>Wearables</option>
-          <option>Accessories</option>
-          <option>Smart Home</option>
-        </select>
-        <select className="px-4 py-2.5 bg-surface-container-low rounded-lg border border-outline-variant text-body-sm focus:ring-2 focus:ring-primary outline-none">
-          <option>All Status</option>
-          <option>Active</option>
-          <option>Low Stock</option>
-          <option>Out of Stock</option>
-        </select>
-      </div>
-
-      {/* Products Table */}
-      <div className="bg-surface rounded-xl border border-outline-variant overflow-hidden">
+      <div className="bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant">
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-surface-container-low border-b border-outline-variant">
-                <th className="text-left px-6 py-4 font-label-md text-label-md text-on-surface-variant">
-                  Product
-                </th>
-                <th className="text-left px-6 py-4 font-label-md text-label-md text-on-surface-variant">
-                  SKU
-                </th>
-                <th className="text-left px-6 py-4 font-label-md text-label-md text-on-surface-variant">
-                  Category
-                </th>
-                <th className="text-left px-6 py-4 font-label-md text-label-md text-on-surface-variant">
-                  Price
-                </th>
-                <th className="text-left px-6 py-4 font-label-md text-label-md text-on-surface-variant">
-                  Stock
-                </th>
-                <th className="text-left px-6 py-4 font-label-md text-label-md text-on-surface-variant">
-                  Status
-                </th>
-                <th className="text-right px-6 py-4 font-label-md text-label-md text-on-surface-variant">
-                  Actions
-                </th>
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-surface-container-low border-b border-outline-variant">
+              <tr>
+                <th className="px-6 py-4 font-label-md text-on-surface-variant">Product</th>
+                <th className="px-6 py-4 font-label-md text-on-surface-variant">Category</th>
+                <th className="px-6 py-4 font-label-md text-on-surface-variant text-right">Price</th>
+                <th className="px-6 py-4 font-label-md text-on-surface-variant text-right">Stock</th>
+                <th className="px-6 py-4 font-label-md text-on-surface-variant text-center">Status</th>
+                <th className="px-6 py-4"></th>
               </tr>
             </thead>
-            <tbody>
-              {products.map((product) => (
-                <tr
-                  key={product.id}
-                  className="border-b border-outline-variant/50 hover:bg-surface-container-low/50 transition-colors"
-                >
+            <tbody className="divide-y divide-outline-variant/30">
+              {loading ? (
+                <tr><td colSpan={6} className="text-center py-12 text-on-surface-variant">Loading products...</td></tr>
+              ) : products.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-12">
+                    <p className="text-on-surface-variant mb-4">No products yet.</p>
+                    <div className="flex gap-3 justify-center">
+                      <Link href="/admin/products/new" className="bg-primary text-on-primary px-6 py-2 rounded-xl font-label-md">Add First Product</Link>
+                      <button onClick={async () => { await fetch("/api/seed", { method: "POST" }); fetchProducts(); }} className="border border-primary text-primary px-6 py-2 rounded-xl font-label-md">Seed Sample Data</button>
+                    </div>
+                  </td>
+                </tr>
+              ) : products.map(product => (
+                <tr key={product.id} className="hover:bg-primary-container/5 transition-colors">
                   <td className="px-6 py-4">
-                    <span className="font-body-md font-semibold text-on-surface">
-                      {product.name}
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg overflow-hidden bg-surface-container border border-outline-variant flex-shrink-0">
+                        {product.imageUrl ? <img className="w-full h-full object-cover" src={product.imageUrl} alt={product.name} /> : <div className="w-full h-full flex items-center justify-center"><span className="material-symbols-outlined text-sm text-on-surface-variant">inventory_2</span></div>}
+                      </div>
+                      <div>
+                        <p className="font-label-md text-on-surface">{product.name}</p>
+                        <p className="text-xs text-on-surface-variant truncate max-w-[200px]">{product.description}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-on-surface-variant">{product.category?.name || "—"}</td>
+                  <td className="px-6 py-4 text-right font-medium">{formatPrice(product.price)}</td>
+                  <td className={`px-6 py-4 text-right font-medium ${product.stock === 0 ? 'text-error' : product.stock < 10 ? 'text-secondary' : ''}`}>{product.stock}</td>
+                  <td className="px-6 py-4 text-center">
+                    {product.stock === 0 ? (
+                      <span className="inline-flex px-2 py-1 bg-error-container text-error text-[10px] uppercase font-bold rounded">Out of Stock</span>
+                    ) : product.stock < 10 ? (
+                      <span className="inline-flex px-2 py-1 bg-secondary-container text-on-secondary-container text-[10px] uppercase font-bold rounded">Low Stock</span>
+                    ) : (
+                      <span className="inline-flex px-2 py-1 bg-tertiary-fixed text-tertiary-fixed-dim text-[10px] uppercase font-bold rounded">Active</span>
+                    )}
                   </td>
                   <td className="px-6 py-4">
-                    <span className="font-code-mono text-code-mono text-on-surface-variant">
-                      {product.sku}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-body-sm text-on-surface-variant">
-                      {product.category}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="font-body-md font-semibold">
-                      ${product.price.toFixed(2)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`font-label-md ${
-                        product.stock === 0
-                          ? "text-error"
-                          : product.stock < 10
-                          ? "text-yellow-600"
-                          : "text-on-surface"
-                      }`}
-                    >
-                      {product.stock}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`inline-block px-3 py-1 rounded-full font-label-sm text-label-sm ${
-                        product.status === "Active"
-                          ? "bg-tertiary-fixed text-on-tertiary-fixed"
-                          : product.status === "Low Stock"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-error-container text-on-error-container"
-                      }`}
-                    >
-                      {product.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button className="text-primary hover:underline text-sm font-medium">
-                      Edit
-                    </button>
+                    <div className="flex justify-end gap-1">
+                      <Link href={`/admin/products/${product.id}/edit`} className="p-2 hover:bg-surface-container-high rounded-lg transition-colors" title="Edit">
+                        <span className="material-symbols-outlined text-on-surface-variant text-sm">edit</span>
+                      </Link>
+                      <button onClick={() => handleDelete(product.id, product.name)} disabled={deleting === product.id} className="p-2 hover:bg-error-container rounded-lg transition-colors" title="Delete">
+                        <span className="material-symbols-outlined text-error text-sm">{deleting === product.id ? "sync" : "delete"}</span>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

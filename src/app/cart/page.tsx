@@ -1,189 +1,125 @@
 "use client";
 
-import React, { useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
+import { useCart } from "@/context/CartContext";
 
-const DUMMY_CART_ITEMS = [
-  {
-    id: "1",
-    name: "Nexus Pro Audio G2",
-    variant: "Matte Charcoal | Wireless",
-    price: 29900, // INR
-    quantity: 1,
-    imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuD-fdteF4SyFHG0XmF_EoBOMAvkvhAmSXhJvk8Wd3F8UpRKgQLnKnsQ8CBlQX-jcKiEnv0G6XwPR0tnPwK_DZc9yH_hV7C1NIPzX1mX-RPbkmXCoirVqv7u1lkOKNXog5Y4BKssM8a4dePskXMcPfRgK7DPAvBprNi-iYaCd0ZzIx3J-j18AuZggpPBGAtZ6DrRHRsNV0rkto_oGD4iAcGy4QF4bbf0f8XV8tvaiavZfCLcGAImP0pe9xeo3OFGQlxw0WpaCyaGvss"
-  },
-  {
-    id: "2",
-    name: "Nexus Flow Keyboard",
-    variant: "Cloud Silver | Mechanical",
-    price: 15900,
-    quantity: 1,
-    imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuDJw7c73Qg2lN8YzGBqdzDTkPtyLqlkdxadFzf7m5aGUfSzJBjXPGAGrQg5s3ulABE7OxVio7XbuybF3Q1ZkpVLZWXXG9sdiBx4G3KIfttrU-DUymY7wB-7YGgEbpCouIpszjiB32izYhj7Yc1taG8PsBRWT9P5o_Xbs7qefkNclIXeE2_dyDGfXtuKirNLXGAE_ej2ftgucmSxoHe3UBeuOu6YG3gfscwH-cGu4lwDBQ4ctAp7I6zjBAnkBZFKPL4-wdnNVc85fzU"
-  }
-];
+const formatPrice = (price: number) =>
+  new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(price);
 
 export default function CartPage() {
-  const [items, setItems] = useState(DUMMY_CART_ITEMS);
+  const { items, updateQuantity, removeItem, subtotal, totalItems } = useCart();
 
-  const updateQuantity = (id: string, delta: number) => {
-    setItems(items.map(item => {
-      if (item.id === id) {
-        const newQuantity = Math.max(1, item.quantity + delta);
-        return { ...item, quantity: newQuantity };
-      }
-      return item;
-    }));
-  };
+  const gst = subtotal * 0.18;
+  const total = subtotal + gst;
 
-  const removeItem = (id: string) => {
-    setItems(items.filter(item => item.id !== id));
-  };
-
-  const formatPrice = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-    }).format(amount);
-  };
-
-  const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const tax = subtotal * 0.18; // Assuming 18% GST for electronics in India
-  const total = subtotal + tax;
+  if (items.length === 0) {
+    return (
+      <main className="max-w-container-max mx-auto px-margin-desktop py-section-gap min-h-[60vh] flex flex-col items-center justify-center text-center">
+        <span className="material-symbols-outlined text-8xl text-on-surface-variant mb-6">shopping_cart</span>
+        <h1 className="font-headline-md text-headline-md mb-3">Your cart is empty</h1>
+        <p className="text-on-surface-variant mb-8">Looks like you haven't added anything yet. Start shopping!</p>
+        <Link href="/shop" className="bg-primary text-on-primary px-8 py-4 rounded-xl font-label-md hover:brightness-110 transition-all active:scale-95">
+          Continue Shopping
+        </Link>
+      </main>
+    );
+  }
 
   return (
     <main className="max-w-container-max mx-auto px-margin-desktop py-stack-xl min-h-[calc(100vh-200px)]">
       <div className="mb-stack-lg">
-        <h1 className="font-headline-md text-headline-md">Your Shopping Basket</h1>
-        <p className="font-body-md text-body-md text-on-surface-variant">Review your selections before checkout.</p>
+        <h1 className="font-headline-md text-headline-md">Your Cart</h1>
+        <p className="font-body-md text-body-md text-on-surface-variant">{totalItems} {totalItems === 1 ? "item" : "items"}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-start">
-        {/* Items List */}
+        {/* Cart Items */}
         <div className="lg:col-span-8 space-y-gutter">
-          {items.map((item) => (
-            <div key={item.id} className="bg-surface-container-lowest p-stack-lg rounded-xl shadow-sm border border-outline-variant flex flex-col md:flex-row gap-stack-lg items-center">
-              <div className="w-32 h-32 flex-shrink-0 bg-surface-container-high rounded-lg overflow-hidden border border-outline-variant">
-                <img className="w-full h-full object-cover" src={item.imageUrl} alt={item.name} />
+          {items.map(item => (
+            <div key={item.id} className="bg-surface-container-lowest p-stack-lg rounded-xl shadow-sm border border-outline-variant flex flex-col md:flex-row gap-stack-lg items-start">
+              <div className="w-28 h-28 flex-shrink-0 bg-surface-container rounded-xl overflow-hidden border border-outline-variant">
+                {item.imageUrl ? (
+                  <img className="w-full h-full object-cover" alt={item.name} src={item.imageUrl} />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <span className="material-symbols-outlined text-3xl text-on-surface-variant">inventory_2</span>
+                  </div>
+                )}
               </div>
-              
-              <div className="flex-grow space-y-stack-sm text-center md:text-left w-full">
-                <div className="flex justify-between items-start">
+              <div className="flex-grow space-y-2">
+                <div className="flex justify-between items-start gap-4">
                   <div>
+                    <p className="font-label-sm text-label-sm text-on-surface-variant">{item.category}</p>
                     <h3 className="font-headline-sm text-headline-sm">{item.name}</h3>
-                    <p className="font-body-sm text-body-sm text-on-surface-variant">{item.variant}</p>
                   </div>
-                  <span className="font-headline-sm text-headline-sm text-primary">{formatPrice(item.price)}</span>
+                  <span className="font-headline-sm text-headline-sm text-primary whitespace-nowrap">
+                    {formatPrice(item.price * item.quantity)}
+                  </span>
                 </div>
-                
-                <div className="flex flex-wrap items-center justify-center md:justify-between gap-stack-md pt-stack-sm">
+                <p className="text-body-sm text-on-surface-variant">{formatPrice(item.price)} each</p>
+                <div className="flex flex-wrap items-center gap-stack-md pt-2">
                   <div className="flex items-center border border-outline-variant rounded-full overflow-hidden">
-                    <button 
-                      onClick={() => updateQuantity(item.id, -1)}
-                      className="px-3 py-2 hover:bg-surface-container-high transition-colors"
-                    >
-                      <span className="material-symbols-outlined text-body-md">remove</span>
+                    <button className="px-3 py-2 hover:bg-surface-container-high transition-colors" onClick={() => updateQuantity(item.id, item.quantity - 1)}>
+                      <span className="material-symbols-outlined text-sm">remove</span>
                     </button>
-                    <span className="px-4 font-label-md text-label-md">{item.quantity}</span>
-                    <button 
-                      onClick={() => updateQuantity(item.id, 1)}
-                      className="px-3 py-2 hover:bg-surface-container-high transition-colors"
-                    >
-                      <span className="material-symbols-outlined text-body-md">add</span>
+                    <span className="px-4 font-label-md text-label-md min-w-[2rem] text-center">{item.quantity}</span>
+                    <button className="px-3 py-2 hover:bg-surface-container-high transition-colors" onClick={() => updateQuantity(item.id, item.quantity + 1)}>
+                      <span className="material-symbols-outlined text-sm">add</span>
                     </button>
                   </div>
-                  <button 
-                    onClick={() => removeItem(item.id)}
+                  <button
                     className="flex items-center gap-1 font-label-md text-label-md text-error hover:underline transition-all"
+                    onClick={() => removeItem(item.id)}
                   >
-                    <span className="material-symbols-outlined text-body-sm">delete</span>
+                    <span className="material-symbols-outlined text-sm">delete</span>
                     Remove
                   </button>
                 </div>
               </div>
             </div>
           ))}
-
-          {items.length === 0 && (
-            <div className="bg-surface-container-lowest p-stack-xl rounded-xl shadow-sm border border-outline-variant text-center">
-              <span className="material-symbols-outlined text-4xl text-outline mb-4">shopping_cart</span>
-              <h3 className="font-headline-sm mb-2">Your basket is empty</h3>
-              <p className="text-on-surface-variant mb-6">Looks like you haven't added anything to your basket yet.</p>
-              <Link href="/shop" className="inline-block px-8 py-3 bg-primary text-on-primary rounded-xl font-label-md hover:brightness-110 transition-all">
-                Continue Shopping
-              </Link>
-            </div>
-          )}
-
-          {/* Promo Section */}
-          {items.length > 0 && (
-            <div className="bg-secondary-container/30 p-stack-lg rounded-xl border border-secondary-fixed flex flex-col md:flex-row items-center justify-between gap-stack-md">
-              <div className="flex items-center gap-stack-md">
-                <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>sell</span>
-                <p className="font-body-md text-body-md">Have a promotional code?</p>
-              </div>
-              <div className="flex w-full md:w-auto gap-2">
-                <input 
-                  className="flex-grow md:w-48 px-4 py-2 rounded-lg border border-outline-variant bg-surface-container-lowest focus:ring-2 focus:ring-primary focus:border-transparent outline-none font-label-md" 
-                  placeholder="CODE2024" 
-                  type="text"
-                />
-                <button className="px-6 py-2 bg-on-surface-variant text-surface-container-lowest rounded-lg font-label-md hover:bg-on-surface transition-colors">Apply</button>
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* Summary Sidebar */}
+        {/* Order Summary */}
         <aside className="lg:col-span-4 sticky top-28">
           <div className="bg-surface-container-lowest p-stack-lg rounded-xl shadow-md border border-outline-variant space-y-stack-lg">
             <h2 className="font-headline-sm text-headline-sm border-b border-outline-variant pb-stack-sm">Order Summary</h2>
-            
             <div className="space-y-stack-sm">
               <div className="flex justify-between font-body-md text-body-md">
-                <span className="text-on-surface-variant">Subtotal</span>
+                <span className="text-on-surface-variant">Subtotal ({totalItems} items)</span>
                 <span>{formatPrice(subtotal)}</span>
               </div>
               <div className="flex justify-between font-body-md text-body-md">
-                <span className="text-on-surface-variant">Estimated Shipping</span>
-                <span className="text-tertiary font-medium">FREE</span>
+                <span className="text-on-surface-variant">Shipping</span>
+                <span className="text-tertiary font-medium">{subtotal >= 999 ? "FREE" : formatPrice(99)}</span>
               </div>
               <div className="flex justify-between font-body-md text-body-md">
-                <span className="text-on-surface-variant">Estimated Tax (18%)</span>
-                <span>{formatPrice(tax)}</span>
+                <span className="text-on-surface-variant">GST (18%)</span>
+                <span>{formatPrice(gst)}</span>
               </div>
             </div>
-            
             <div className="border-t border-outline-variant pt-stack-md">
               <div className="flex justify-between items-baseline mb-stack-md">
                 <span className="font-headline-sm text-headline-sm">Total</span>
-                <span className="font-display-lg-mobile text-display-lg-mobile text-primary">{formatPrice(total)}</span>
+                <span className="text-3xl font-bold text-primary">{formatPrice(total)}</span>
               </div>
-              
-              <Link 
+              <Link
                 href="/checkout"
-                className={`w-full py-4 bg-primary text-on-primary rounded-xl font-headline-sm flex items-center justify-center gap-2 hover:bg-surface-tint transition-all shadow-lg active:scale-[0.98] ${items.length === 0 ? 'opacity-50 pointer-events-none' : ''}`}
+                className="w-full py-4 bg-primary text-on-primary rounded-xl font-headline-sm flex items-center justify-center gap-2 hover:brightness-110 transition-all shadow-lg active:scale-[0.98]"
               >
                 Proceed to Checkout
                 <span className="material-symbols-outlined">arrow_forward</span>
               </Link>
-              
-              <div className="mt-stack-lg space-y-stack-sm text-center">
+              <Link href="/shop" className="w-full py-3 mt-3 border border-outline-variant rounded-xl font-label-md flex items-center justify-center gap-2 hover:bg-surface-container transition-all">
+                Continue Shopping
+              </Link>
+              <div className="mt-4 text-center">
                 <p className="font-label-sm text-label-sm text-on-surface-variant flex items-center justify-center gap-1">
                   <span className="material-symbols-outlined text-[16px]">verified_user</span>
-                  Secure 256-bit SSL encrypted checkout
+                  Secure 256-bit SSL checkout
                 </p>
-                <div className="flex justify-center gap-4 opacity-40">
-                  <span className="material-symbols-outlined">credit_card</span>
-                  <span className="material-symbols-outlined">account_balance_wallet</span>
-                  <span className="material-symbols-outlined">contactless</span>
-                </div>
               </div>
             </div>
-          </div>
-          
-          <div className="mt-stack-lg p-stack-md bg-surface-container rounded-lg border border-outline-variant">
-            <p className="font-label-md text-label-md text-on-surface-variant italic">"NexusRetail ensures a carbon-neutral shipping experience for all enterprise orders."</p>
           </div>
         </aside>
       </div>

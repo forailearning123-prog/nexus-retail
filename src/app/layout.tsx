@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Geist } from "next/font/google";
 import "./globals.css";
 import StorefrontWrapper from "@/components/StorefrontWrapper";
+import { CartProvider } from "@/context/CartContext";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -38,9 +39,11 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-surface text-on-surface font-sans antialiased min-h-screen flex flex-col">
-        <StorefrontWrapper>
-          {children}
-        </StorefrontWrapper>
+        <CartProvider>
+          <StorefrontWrapper>
+            {children}
+          </StorefrontWrapper>
+        </CartProvider>
       </body>
     </html>
   );

@@ -23,11 +23,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <span className="font-label-md text-label-md">Inventory</span>
           </Link>
           <Link 
-            href="/admin/cms" 
-            className={`flex items-center gap-3 px-4 py-3 mx-2 my-1 rounded-lg transition-all ${pathname === '/admin/cms' ? 'bg-primary-container text-on-primary-container shadow-sm' : 'text-surface-variant hover:bg-on-surface-variant/10'}`}
+            href="/admin/products" 
+            className={`flex items-center gap-3 px-4 py-3 mx-2 my-1 rounded-lg transition-all ${pathname.startsWith('/admin/products') ? 'bg-primary-container text-on-primary-container shadow-sm' : 'text-surface-variant hover:bg-on-surface-variant/10'}`}
           >
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: pathname === '/admin/cms' ? "'FILL' 1" : "" }}>design_services</span>
-            <span className="font-label-md text-label-md">CMS (Pages)</span>
+            <span className="material-symbols-outlined" style={{ fontVariationSettings: pathname.startsWith('/admin/products') ? "'FILL' 1" : "" }}>storefront</span>
+            <span className="font-label-md text-label-md">Products</span>
           </Link>
           <Link 
             href="/admin/orders" 
@@ -35,6 +35,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           >
             <span className="material-symbols-outlined" style={{ fontVariationSettings: pathname === '/admin/orders' ? "'FILL' 1" : "" }}>shopping_bag</span>
             <span className="font-label-md text-label-md">Orders</span>
+          </Link>
+          <Link 
+            href="/admin/cms" 
+            className={`flex items-center gap-3 px-4 py-3 mx-2 my-1 rounded-lg transition-all ${pathname === '/admin/cms' ? 'bg-primary-container text-on-primary-container shadow-sm' : 'text-surface-variant hover:bg-on-surface-variant/10'}`}
+          >
+            <span className="material-symbols-outlined" style={{ fontVariationSettings: pathname === '/admin/cms' ? "'FILL' 1" : "" }}>design_services</span>
+            <span className="font-label-md text-label-md">CMS</span>
           </Link>
         </nav>
         <div className="mt-auto px-4 py-6 space-y-1">
